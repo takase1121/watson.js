@@ -1,17 +1,23 @@
 {
-  "name": "h",
-  "version": "1.0.0",
+  "name": "watson.js",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "tap index.test.js",
-    "cov": "tap index.test.js --coverage-report=html",
-    "lint": "standard ."
+    "test": "tap test",
+    "cov": "tap test --coverage-report=html",
+    "lint": "standard src",
+    "benchmark": "node benchmark.js",
+    "build": "babel src -d lib"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "benchmark": "^2.1.4",
     "standard": "^16.0.3",
     "tap": "^14.11.0"
   }
