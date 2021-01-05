@@ -1,7 +1,7 @@
 {
   "name": "watson.js",
   "version": "0.0.1",
-  "description": "",
+  "description": "Library to deal with WATSON",
   "main": "lib/index.js",
   "scripts": {
     "test": "tap test",
@@ -10,9 +10,9 @@
     "benchmark": "node benchmark.js",
     "build": "babel src -d lib"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["serialization", "deserialization", "watson"],
+  "author": "takase1121",
+  "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.12.10",
     "@babel/core": "^7.12.10",
