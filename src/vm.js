@@ -1,5 +1,7 @@
 const { T, OPCODES, getType } = require('./common')
 
+const CHAR = Array(256).fill().map((_, i) => String.fromCharCode(i))
+
 /**
  * Throwed when stack has insufficient value for the opcode
  */
@@ -91,7 +93,7 @@ const snew = stack => stack.push('')
 const sadd = stack => {
   const x = pop(stack, T.Int, 0)
   const s = pop(stack, T.String, 1)
-  stack.push(s + String.fromCharCode(Number(x & 0xFFn)))
+  stack.push(s + CHAR[Number(x & 0xFFn)])
 }
 const onew = stack => stack.push({})
 const oadd = stack => {
