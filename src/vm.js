@@ -1,5 +1,8 @@
 const { T, OPCODES, getType } = require('./common')
 
+/**
+ * Character lookup table
+ */
 const CHAR = Array(256).fill().map((_, i) => String.fromCharCode(i))
 
 /**
