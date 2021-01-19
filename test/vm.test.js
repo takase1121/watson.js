@@ -2,8 +2,37 @@ const tap = require('tap')
 const c = require('../lib/common')
 const v = require('../lib/vm')
 
-const exec = (f, ...args) => { f(args); return args[0] }
-const exec2 = (f, ...args) => { f(args); return args }
+const exec = (f, ...args) => {
+  const s = new v.Stack()
+  args.forEach(x => s.push(c.getType(x), x))
+  f(s)
+  return s.pop(c.T.Any)[0]
+}
+
+const exec2 = (f, ...args) => {
+  const s = new v.Stack()
+  args.forEach(x => s.push(c.getType(x), x))
+  f(s)
+  return s.segment.filter((_, i) => i % 2 === 0)
+}
+
+tap.test('Stack', t => {
+  const s = new v.Stack()
+  t.equal(s.length, 0)
+  t.equal(s.segment[0], undefined)
+
+  s.push(c.T.Int, 1n)
+  s.push(c.T.Int, 2n)
+  t.equal(s.segment[0], 1n)
+  t.equal(s.segment[1], c.T.Int)
+  t.equal(s.length, 2)
+
+  t.strictSame(s.pop(c.T.Int), [2n, c.T.Int])
+  t.throws(() => s.pop(c.T.String), 'Wrong type')
+  t.equal(s.length, 0, 'pop fail does not put data back')
+
+  t.end()
+})
 
 tap.test('WATSON operations', t => {
   const operations = v.operations.reduce((a, v, i) => { a[c.OPCODES[i]] = v; return a }, {})
@@ -36,7 +65,7 @@ tap.test('WATSON operations', t => {
 tap.test('execute', t => {
   t.equal(
     v.execute(
-      [],
+      new v.Stack(),
       [
         { opcode: c.OPCODES.inew, offset: 0 },
         { opcode: c.OPCODES.iinc, offset: 1 }
@@ -46,7 +75,7 @@ tap.test('execute', t => {
     'Normal'
   )
   t.throws(() => v.execute(
-    [],
+    new v.Stack(),
     [
       { opcode: c.OPCODES.inew, offset: 0 },
       { opcode: c.OPCODES.inew, offset: 1 }
@@ -54,7 +83,7 @@ tap.test('execute', t => {
     'Invalid stack'
   ))
   t.throws(() => v.execute(
-    [],
+    new v.Stack(),
     [
       { opcode: c.OPCODES.inew, offset: 0 },
       { opcode: c.OPCODES.bneg, offset: 1 }
@@ -62,7 +91,7 @@ tap.test('execute', t => {
     'Type mismatch'
   ))
   t.throws(() => v.execute(
-    [],
+    new v.Stack(),
     [
       { opcode: c.OPCODES.onew, offset: 0 },
       { opcode: c.OPCODES.oadd, offset: 1 }

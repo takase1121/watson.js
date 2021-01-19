@@ -1,4 +1,4 @@
-const { T, OPCODES, getType } = require('./common')
+const { T, OPCODES } = require('./common')
 
 /**
  * Character lookup table
@@ -35,99 +35,112 @@ class TypeMismatchError extends Error {
 }
 
 /**
- * Pop from stack with stack size checking and type checking
- * @param {any[]} stack The stack
- * @param {import('../lib/common').WatsonType} expected Expected type
- * @param {number} i index of argument
+ * A wrapper around an array which provides custom push and pop operations
  */
-const pop = (stack, expected, i) => {
-  if (!stack.length) {
-    throw new StackUnderflowError()
+class Stack {
+  constructor () {
+    this.segment = []
   }
-  const d = stack.pop()
-  const found = getType(d)
-  if (expected !== T.Any && expected !== found) {
-    throw new TypeMismatchError(i, expected, found)
+
+  get length () {
+    return this.segment.length / 2
   }
-  return d
+
+  push (type, value) {
+    this.segment.push(value, type)
+  }
+
+  pop (expected, i) {
+    if (!this.length) {
+      throw new StackUnderflowError()
+    }
+    const type = this.segment.pop()
+    const value = this.segment.pop()
+    if (expected !== T.Any && type !== expected) {
+      throw new TypeMismatchError(i, expected, type)
+    }
+    return [value, type]
+  }
 }
 
 /**
  * Massive inlined funcs
  */
-const inew = stack => stack.push(0n)
+const inew = stack => stack.push(T.Int, 0n)
 const iinc = stack => {
-  const x = pop(stack, T.Int, 0)
-  stack.push(x + 1n)
+  const [x] = stack.pop(T.Int, 0)
+  stack.push(T.Int, x + 1n)
 }
 const ishl = stack => {
-  const x = pop(stack, T.Int, 0)
-  stack.push(x << 1n)
+  const [x] = stack.pop(T.Int, 0)
+  stack.push(T.Int, x << 1n)
 }
 const iadd = stack => {
-  const y = pop(stack, T.Int, 0)
-  const x = pop(stack, T.Int, 1)
-  stack.push(x + y)
+  const [y] = stack.pop(T.Int, 0)
+  const [x] = stack.pop(T.Int, 1)
+  stack.push(T.Int, x + y)
 }
 const ineg = stack => {
-  const x = pop(stack, T.Int, 0)
-  stack.push(-x)
+  const [x] = stack.pop(T.Int, 0)
+  stack.push(T.Int, -x)
 }
 const isht = stack => {
-  const y = pop(stack, T.Int, 0)
-  const x = pop(stack, T.Int, 1)
-  stack.push(x << y)
+  const [y] = stack.pop(T.Int, 0)
+  const [x] = stack.pop(T.Int, 1)
+  stack.push(T.Int, x << y)
 }
 const itof = stack => {
-  const x = pop(stack, T.Int, 0)
-  stack.push(Number(x))
+  const [x] = stack.pop(T.Int, 0)
+  stack.push(T.Float, Number(x))
 }
 const itou = stack => {
-  const x = pop(stack, T.Int, 0)
-  stack.push(BigInt.asUintN(64, x))
+  const [x] = stack.pop(T.Int, 0)
+  stack.push(T.Int, BigInt.asUintN(64, x))
 }
-const finf = stack => stack.push(Number.POSITIVE_INFINITY)
-const fnan = stack => stack.push(NaN)
+const finf = stack => stack.push(T.Float, Number.POSITIVE_INFINITY)
+const fnan = stack => stack.push(T.Float, NaN)
 const fneg = stack => {
-  const x = pop(stack, T.Float, 0)
-  stack.push(-x)
+  const [x] = stack.pop(T.Float, 0)
+  stack.push(T.Float, -x)
 }
-const snew = stack => stack.push('')
+const snew = stack => stack.push(T.String, '')
 const sadd = stack => {
-  const x = pop(stack, T.Int, 0)
-  const s = pop(stack, T.String, 1)
-  stack.push(s + CHAR[Number(x & 0xFFn)])
+  const [x] = stack.pop(T.Int, 0)
+  const [s] = stack.pop(T.String, 1)
+  stack.push(T.String, s + CHAR[Number(x & 0xFFn)])
 }
-const onew = stack => stack.push({})
+const onew = stack => stack.push(T.Object, {})
 const oadd = stack => {
-  const v = pop(stack, T.Any, 0)
-  const k = pop(stack, T.String, 1)
-  const o = pop(stack, T.Object, 2)
+  const [v] = stack.pop(T.Any, 0)
+  const [k] = stack.pop(T.String, 1)
+  const [o] = stack.pop(T.Object, 2)
   o[k] = v
-  stack.push(o)
+  stack.push(T.Object, o)
 }
-const anew = stack => stack.push([])
+const anew = stack => stack.push(T.Array, [])
 const aadd = stack => {
-  const x = pop(stack, T.Any, 0)
-  const a = pop(stack, T.Array, 1)
+  const [x] = stack.pop(T.Any, 0)
+  const [a] = stack.pop(T.Array, 1)
   a.push(x)
-  stack.push(a)
+  stack.push(T.Array, a)
 }
-const bnew = stack => stack.push(false)
+const bnew = stack => stack.push(T.Bool, false)
 const bneg = stack => {
-  const x = pop(stack, T.Bool, 0)
-  stack.push(!x)
+  const [x] = stack.pop(T.Bool, 0)
+  stack.push(T.Bool, !x)
 }
-const nnew = stack => stack.push(null)
+const nnew = stack => stack.push(T.Nil, null)
 const gdup = stack => {
-  const x = pop(stack, T.Any, 0)
-  stack.push(x, x)
+  const [x, type] = stack.pop(T.Any, 0)
+  stack.push(type, x)
+  stack.push(type, x)
 }
-const gpop = stack => pop(stack, T.Any, 0)
+const gpop = stack => stack.pop(T.Any, 0)
 const gswp = stack => {
-  const y = pop(stack, T.Any, 0)
-  const x = pop(stack, T.Any, 1)
-  stack.push(y, x)
+  const [y, type1] = stack.pop(T.Any, 0)
+  const [x, type2] = stack.pop(T.Any, 1)
+  stack.push(type1, y)
+  stack.push(type2, x)
 }
 
 /**
@@ -177,11 +190,12 @@ function execute (stack, opcodes) {
   if (stack.length !== 1) {
     throw new InvalidStackError(stack)
   } else {
-    return stack.pop()
+    return stack.pop(T.Any)[0]
   }
 }
 
 module.exports = {
   operations,
-  execute
+  execute,
+  Stack
 }

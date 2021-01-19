@@ -1,8 +1,8 @@
-const { execute } = require('./vm')
+const { Stack, execute } = require('./vm')
 const { getTokens, tokenToOpcode } = require('./lex')
 
 function parse (str, mode = 'A') {
-  const stack = []
+  const stack = new Stack()
 
   const tokens = getTokens(str)
   const opcodes = tokenToOpcode(tokens, mode)
