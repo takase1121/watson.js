@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "description": "Library to deal with WATSON",
   "main": "lib/index.js",
+  "typings": "index.d.ts",
   "scripts": {
     "test": "tap test",
     "cov": "tap test --coverage-report=html",
