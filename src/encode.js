@@ -86,11 +86,7 @@ function stringify (x, options) {
   dumpAny(stack, x)
   if (pretty) stack = prettify(stack, mode)
 
-  let output = ''
-  for (const v of unlex(stack, mode)) {
-    output += v
-  }
-  return output
+  return unlex(stack, mode).join('')
 }
 
 module.exports = {

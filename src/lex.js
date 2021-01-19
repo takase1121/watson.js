@@ -1,63 +1,81 @@
-const { WATSONREP, OPCODES, lastOne } = require('./common')
+const { WATSONREP, OPCODES, COPCODE_MAP } = require('./common')
 
-/**
- * Returns string iterator of the string
- * @param {string} str
- */
-function * getTokens (str) {
-  const slen = str.length
-  for (let i = 0; i < slen; i++) {
-    yield ({ token: str[i], offset: i })
-  }
+function tokenToOpcode (tokens, mode) {
+  return tokens
+    .map((token, offset) => {
+      const opcode = WATSONREP[mode][token]
+      if (opcode === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A'
+      return { opcode, offset }
+    })
+    .filter(({ opcode }) => opcode !== undefined)
 }
 
-function * tokenToOpcode (tokens, mode) {
-  for (const { token, offset } of tokens) {
-    const opcode = WATSONREP[mode][token]
-    if (opcode === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A'
-    if (opcode !== undefined) yield ({ opcode, offset })
-  }
+function unsafeTokenToOpcode (tokens, mode) {
+  let optimized, lastOp
+  return tokens
+    .map((token, offset) => {
+      const nowOp = WATSONREP[mode][token]
+      if (nowOp === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A'
+
+      if (lastOp === OPCODES.snew || lastOp === OPCODES.sadd) {
+        optimized = nowOp === OPCODES.inew
+      }
+
+      lastOp = nowOp
+      if (optimized) {
+        // istanbul ignore next
+        return { opcode: COPCODE_MAP[nowOp] ?? nowOp, offset }
+      } else {
+        return { opcode: nowOp, offset }
+      }
+    })
+    .filter(({ opcode }) => opcode !== undefined)
 }
 
-function * unlex (opcodes, mode) {
-  for (const opcode of opcodes) {
-    const rep = WATSONREP[mode][opcode]
-    if (opcode === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A'
-    yield rep
-  }
+function unlex (opcodes, mode) {
+  return opcodes
+    .map(opcode => {
+      const rep = WATSONREP[mode][opcode]
+      if (opcode === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A'
+      return rep
+    })
 }
 
-function * prettify (ops, mode) {
-  for (const [last, now] of lastOne(ops)) {
+function prettify (ops, mode) {
+  const output = []
+  let last
+  ops.forEach(now => {
     switch (mode) {
       case 'A':
         if (last === OPCODES.bnew && now === OPCODES.oadd) {
-          yield * [OPCODES.bneg, OPCODES.bneg, OPCODES.oadd]
+          output.push(OPCODES.bneg, OPCODES.bneg, OPCODES.oadd)
         } else if (last !== undefined && OPCODES[last][0] === 'i' && now === OPCODES.oadd) {
-          yield * [OPCODES.ineg, OPCODES.ineg, OPCODES.oadd, OPCODES.gdup, OPCODES.gpop]
+          output.push(OPCODES.ineg, OPCODES.ineg, OPCODES.oadd, OPCODES.gdup, OPCODES.gpop)
         } else {
-          yield now
+          output.push(now)
         }
         break
 
       case 'S':
         if (last === OPCODES.ishl && now === OPCODES.iadd) { // Sharrk
-          yield * [OPCODES.ineg, OPCODES.ineg, OPCODES.iadd]
+          output.push(OPCODES.ineg, OPCODES.ineg, OPCODES.iadd)
         } else if (last === OPCODES.isht && now === OPCODES.iadd) { // ShaArrk
-          yield * [OPCODES.ineg, OPCODES.ineg, OPCODES.iadd]
+          output.push(OPCODES.ineg, OPCODES.ineg, OPCODES.iadd)
         } else if (now === OPCODES.onew) { // Samee
-          yield * [OPCODES.inew, OPCODES.ishl, OPCODES.finf, OPCODES.gpop, OPCODES.gpop, OPCODES.onew]
+          output.push(OPCODES.inew, OPCODES.ishl, OPCODES.finf, OPCODES.gpop, OPCODES.gpop, OPCODES.onew)
         } else {
-          yield now
+          output.push(now)
         }
     }
     if (now === OPCODES.snew) mode = mode === 'A' ? 'S' : 'A' // we also need to account for snew
-  }
+    last = now
+  })
+  return output
 }
 
 module.exports = {
-  getTokens,
   tokenToOpcode,
+  unsafeTokenToOpcode,
   unlex,
   prettify
 }

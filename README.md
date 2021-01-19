@@ -18,14 +18,21 @@ const SFirst = WATSON.stringify(data, { mode: 'S' })
 
 WATSON.parse(s)
 WATSON.parse(SFirst, 'S')
+
+// unsafe parsing
+// this mode tries to replace possible string operations with float instead of int
+// this is because WATSON's int maps to BigInt, which is slow on most platforms
+// this mode detects sadd/snew, inew and replace them with float operations
+WATSON.parse(s, 'A', true)
 ```
 
 #### Some notes
-Currently the implementation is quite slow (especially parsing WATSON).
-Ideas for improvements are appreciated.
+The implementation is now faster after most lazy evaluation code is replaced with eager evaluations.
+Any improvements are still welcome.
 
 #### Benchmark because why not
 ```
-stringify x 40,315 ops/sec ±2.70% (77 runs sampled)
-parse x 31,466 ops/sec ±2.61% (81 runs sampled)
+stringify x 55,492 ops/sec ±2.63% (77 runs sampled)
+parse x 51,515 ops/sec ±2.52% (80 runs sampled)
+parse unsafe x 54,400 ops/sec ±2.51% (74 runs sampled)
 ```

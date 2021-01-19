@@ -2,21 +2,8 @@ const tap = require('tap')
 const c = require('../lib/common')
 const l = require('../lib/lex')
 
-const exec = (f, ...args) => [...f(...args)]
 tap.strictSame(
-  exec(l.getTokens, 'hello'),
-  [
-    { token: 'h', offset: 0 },
-    { token: 'e', offset: 1 },
-    { token: 'l', offset: 2 },
-    { token: 'l', offset: 3 },
-    { token: 'o', offset: 4 }
-  ]
-)
-
-const tokens = l.getTokens('Bu?Sh$Bu')
-tap.strictSame(
-  exec(l.tokenToOpcode, tokens, 'A'),
+  l.tokenToOpcode([...'Bu?Sh$Bu'], 'A'),
   [
     { opcode: c.OPCODES.inew, offset: 0 },
     { opcode: c.OPCODES.iinc, offset: 1 },
@@ -30,8 +17,7 @@ tap.strictSame(
 )
 
 tap.strictSame(
-  exec(
-    l.unlex,
+  l.unlex(
     [
       c.OPCODES.inew,
       c.OPCODES.snew,
@@ -44,9 +30,34 @@ tap.strictSame(
   ['B', '?', 'S', '$', 'B']
 )
 
+const input1 = l.unlex(
+  [
+    c.OPCODES.snew, c.OPCODES.inew,
+    c.OPCODES.iinc, c.OPCODES.ishl,
+    c.OPCODES.sadd, c.OPCODES.gpop,
+    c.OPCODES.snew, c.OPCODES.gpop,
+    c.OPCODES.sadd, c.OPCODES.inew,
+    c.OPCODES.iinc, c.OPCODES.ishl,
+    c.OPCODES.sadd, c.OPCODES.gpop
+  ],
+  'A'
+)
+const output1 = [
+  { opcode: c.OPCODES.snew, offset: 0 }, { opcode: c.OPCODES.fnew, offset: 1 },
+  { opcode: c.OPCODES.finc, offset: 2 }, { opcode: c.OPCODES.fshl, offset: 3 },
+  { opcode: c.OPCODES.sadf, offset: 4 }, { opcode: c.OPCODES.gpop, offset: 5 },
+  { opcode: c.OPCODES.snew, offset: 6 }, { opcode: c.OPCODES.gpop, offset: 7 },
+  { opcode: c.OPCODES.sadd, offset: 8 }, { opcode: c.OPCODES.fnew, offset: 9 },
+  { opcode: c.OPCODES.finc, offset: 10 }, { opcode: c.OPCODES.fshl, offset: 11 },
+  { opcode: c.OPCODES.sadf, offset: 12 }, { opcode: c.OPCODES.gpop, offset: 13 }
+]
 tap.strictSame(
-  exec(
-    l.prettify,
+  l.unsafeTokenToOpcode(input1, 'A'),
+  output1
+)
+
+tap.strictSame(
+  l.prettify(
     [
       c.OPCODES.bnew, c.OPCODES.oadd,
       c.OPCODES.inew, c.OPCODES.oadd,

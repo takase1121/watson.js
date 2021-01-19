@@ -12,13 +12,3 @@ tap.test('getType', t => {
   t.throws(() => c.getType(Symbol.iterator))
   t.end()
 })
-
-tap.strictSame(
-  [...c.zip([1, 2], [3, 4], ([5, 6, 7])[Symbol.iterator]())],
-  [[1, 3, 5], [2, 4, 6]]
-)
-
-tap.strictSame(
-  [...c.lastOne([1, 2, 3])],
-  [[undefined, 1], [1, 2], [2, 3]]
-)

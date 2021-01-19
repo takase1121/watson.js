@@ -142,6 +142,35 @@ const gswp = stack => {
   stack.push(type1, y)
   stack.push(type2, x)
 }
+const fnew = stack => {
+  stack.push(T.Float, 0)
+}
+const finc = stack => {
+  const [x] = stack.pop(T.Float, 0)
+  stack.push(T.Float, x + 1)
+}
+const fshl = stack => {
+  const [x] = stack.pop(T.Float, 0)
+  stack.push(T.Float, x << 1)
+}
+const fadd = stack => {
+  const [y] = stack.pop(T.Float, 0)
+  const [x] = stack.pop(T.Float, 1)
+  stack.push(T.Float, x + y)
+}
+// fsht is rarely used by output generated
+// by watson
+// istanbul ignore next
+const fsht = stack => {
+  const [y] = stack.pop(T.Float, 0)
+  const [x] = stack.pop(T.Float, 1)
+  stack.push(T.Float, x << y)
+}
+const sadf = stack => {
+  const [x] = stack.pop(T.Float, 0)
+  const [s] = stack.pop(T.String, 1)
+  stack.push(T.String, s + CHAR[x & 0xFF])
+}
 
 /**
  * Mapping of opcodes to actual instructions
@@ -169,7 +198,13 @@ const operations = [
   nnew,
   gdup,
   gpop,
-  gswp
+  gswp,
+  fnew,
+  finc,
+  fshl,
+  fadd,
+  fsht,
+  sadf
 ]
 
 function execute (stack, opcodes) {

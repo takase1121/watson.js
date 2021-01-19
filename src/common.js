@@ -47,8 +47,25 @@ const OPCODES = Enum(
   'nnew',
   'gdup',
   'gpop',
-  'gswp'
+  'gswp',
+  // custom opcodes
+  'fnew',
+  'finc',
+  'fshl',
+  'fadd',
+  'fsht',
+  'sadf'
 )
+
+const COPCODE_MAP = {
+  [OPCODES.inew]: OPCODES.fnew,
+  [OPCODES.iinc]: OPCODES.finc,
+  [OPCODES.ishl]: OPCODES.fshl,
+  [OPCODES.iadd]: OPCODES.fadd,
+  [OPCODES.ineg]: OPCODES.fneg,
+  [OPCODES.isht]: OPCODES.fsht,
+  [OPCODES.sadd]: OPCODES.sadf
+}
 
 /** A representation */
 const A = Enum(
@@ -126,38 +143,11 @@ const getType = value => {
   throw new TypeError(`Unknown type for ${value}`)
 }
 
-/**
- * Good'ol zip from python
- * @param  {...Iterable} iterable Any iterable
- */
-function * zip (...iterable) {
-  iterable = iterable.map(iter => Array.isArray(iter) ? iter[Symbol.iterator]() : iter)
-  while (true) {
-    const nextVal = iterable.map(iter => iter.next())
-    if (nextVal.some(({ done }) => done)) break
-    yield nextVal.map(({ value }) => value)
-  }
-}
-
-/**
- * Returns the current item and the last item of an iterable
- * @param  {...any} iterable Any iterable
- */
-function * lastOne (iterable) {
-  let last
-  for (const v of iterable) {
-    const y = [last, v]
-    last = v
-    yield y
-  }
-}
-
 module.exports = {
   Enum,
   T,
   OPCODES,
+  COPCODE_MAP,
   WATSONREP,
-  getType,
-  zip,
-  lastOne
+  getType
 }
