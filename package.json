@@ -1,6 +1,6 @@
 {
   "name": "watson.js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Library to deal with WATSON",
   "main": "lib/index.js",
   "scripts": {
@@ -10,7 +10,11 @@
     "benchmark": "node benchmark.js",
     "build": "babel src -d lib"
   },
-  "keywords": ["serialization", "deserialization", "watson"],
+  "keywords": [
+    "serialization",
+    "deserialization",
+    "watson"
+  ],
   "author": "takase1121",
   "license": "MIT",
   "devDependencies": {
