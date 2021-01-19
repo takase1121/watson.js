@@ -17,13 +17,13 @@ const prettified = WATSON.stringify(data, { prettify: true })
 const SFirst = WATSON.stringify(data, { mode: 'S' })
 
 WATSON.parse(s)
-WATSON.parse(SFirst, 'S')
+WATSON.parse(SFirst, { mode: 'S' })
 
 // unsafe parsing
 // this mode tries to replace possible string operations with float instead of int
 // this is because WATSON's int maps to BigInt, which is slow on most platforms
 // this mode detects sadd/snew, inew and replace them with float operations
-WATSON.parse(s, 'A', true)
+WATSON.parse(s, { unsafe: true })
 ```
 
 #### Some notes
